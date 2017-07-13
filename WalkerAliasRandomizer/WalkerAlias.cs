@@ -9,26 +9,25 @@ namespace WalkerAliasRandomizer
         private readonly int _weightLength;
         private readonly List<int> _inx;
         private readonly List<double> _probabilities;
-        private readonly List<int> _short;
-        private readonly List<int> _long;
         private readonly IList<KeyValuePair<string, int>> _values;
         private static readonly Random Random = new Random();
 
         public WalkerAlias(IList<KeyValuePair<string, int>> values)
         {
             _weightLength = values.Count();
-            var sumw = values.Select(x => x.Value).Sum();
+            _values = values;
             _inx = new List<int>();
             _probabilities = new List<double>();
-            _short = new List<int>();
-            _long = new List<int>();
-            _values = values;
+
+            var cumulativeSum = values.Select(x => x.Value).Sum();
+            var shortOptions = new List<int>();
+            var longOptions = new List<int>();
 
             foreach (var value in _values)
             {
                 _inx.Add(-1);
 
-                var probability = (double)value.Value * _weightLength / sumw;
+                var probability = (double)value.Value * _weightLength / cumulativeSum;
 
                 _probabilities.Add(probability);
             }
@@ -36,23 +35,23 @@ namespace WalkerAliasRandomizer
             for (var i = 0; i < _probabilities.Count(); i++)
             {
                 if (_probabilities[i] < 1)
-                    _short.Add(i);
+                    shortOptions.Add(i);
                 if (_probabilities[i] > 1)
-                    _long.Add(i);
+                    longOptions.Add(i);
             }
 
-            while (_short.Any() && _long.Any())
+            while (shortOptions.Any() && longOptions.Any())
             {
-                var currentShort = _short.Pop();
-                var currentLong = _long.Last();
+                var currentShort = shortOptions.Pop();
+                var currentLong = longOptions.Last();
 
                 _inx[currentShort] = currentLong;
                 _probabilities[currentLong] -= (1 - _probabilities[currentShort]);
 
                 if (_probabilities[currentLong] < 1)
                 {
-                    _short.Add(currentLong);
-                    _long.Pop();
+                    shortOptions.Add(currentLong);
+                    longOptions.Pop();
                 }
             }
         }
