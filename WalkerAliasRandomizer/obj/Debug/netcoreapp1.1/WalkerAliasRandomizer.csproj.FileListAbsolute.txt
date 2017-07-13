@@ -1,0 +1,7 @@
+C:\git\private\WalkerAliasRandomizer\WalkerAliasRandomizer\bin\Debug\netcoreapp1.1\WalkerAliasRandomizer.deps.json
+C:\git\private\WalkerAliasRandomizer\WalkerAliasRandomizer\bin\Debug\netcoreapp1.1\WalkerAliasRandomizer.dll
+C:\git\private\WalkerAliasRandomizer\WalkerAliasRandomizer\bin\Debug\netcoreapp1.1\WalkerAliasRandomizer.pdb
+C:\git\private\WalkerAliasRandomizer\WalkerAliasRandomizer\obj\Debug\netcoreapp1.1\WalkerAliasRandomizer.csprojResolveAssemblyReference.cache
+C:\git\private\WalkerAliasRandomizer\WalkerAliasRandomizer\obj\Debug\netcoreapp1.1\WalkerAliasRandomizer.AssemblyInfo.cs
+C:\git\private\WalkerAliasRandomizer\WalkerAliasRandomizer\obj\Debug\netcoreapp1.1\WalkerAliasRandomizer.dll
+C:\git\private\WalkerAliasRandomizer\WalkerAliasRandomizer\obj\Debug\netcoreapp1.1\WalkerAliasRandomizer.pdb
