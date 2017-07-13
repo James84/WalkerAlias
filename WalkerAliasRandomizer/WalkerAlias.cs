@@ -4,73 +4,99 @@ using System.Linq;
 
 namespace WalkerAliasRandomizer
 {
-    public class WalkerAlias
+    // Ported from NodeJs - https://github.com/ThoughtLeadr/Walker-Random-Node/blob/master/src/walker.js
+    public class WalkerAlias<T>
     {
-        private readonly int _weightLength;
-        private readonly List<int> _inx;
+        private readonly List<int> _alias;
         private readonly List<double> _probabilities;
-        private readonly IList<KeyValuePair<string, int>> _values;
-        private static readonly Random Random = new Random();
+        private readonly Random _random = new Random();
+        private IList<KeyValuePair<T, int>> _values;
+        private int _weightLength;
 
-        public WalkerAlias(IList<KeyValuePair<string, int>> values)
+        public WalkerAlias()
         {
-            _weightLength = values.Count();
+            _alias = new List<int>();
+            _probabilities = new List<double>();            
+        }
+
+        public void Build(IList<KeyValuePair<T, int>> values)
+        {
+            var underFull = new List<int>();
+            var overFull = new List<int>();
+
+            _weightLength = values.Count;
             _values = values;
-            _inx = new List<int>();
-            _probabilities = new List<double>();
 
             var cumulativeSum = values.Select(x => x.Value).Sum();
-            var shortOptions = new List<int>();
-            var longOptions = new List<int>();
 
+            PopulateProbabilityAndAlias(cumulativeSum);
+
+            PopulateOverAndUnderfull(underFull, overFull);
+
+            ProcessOverAndUnderfull(underFull, overFull);
+        }
+
+        private void PopulateProbabilityAndAlias(int cumulativeSum)
+        {
             foreach (var value in _values)
             {
-                _inx.Add(-1);
+                _alias.Add(-1);
 
                 var probability = (double)value.Value * _weightLength / cumulativeSum;
 
                 _probabilities.Add(probability);
             }
+        }
 
+        private void PopulateOverAndUnderfull(List<int> underFull, List<int> overFull)
+        {
             for (var i = 0; i < _probabilities.Count(); i++)
             {
                 if (_probabilities[i] < 1)
-                    shortOptions.Add(i);
+                    underFull.Add(i);
                 if (_probabilities[i] > 1)
-                    longOptions.Add(i);
-            }
-
-            while (shortOptions.Any() && longOptions.Any())
-            {
-                var currentShort = shortOptions.Pop();
-                var currentLong = longOptions.Last();
-
-                _inx[currentShort] = currentLong;
-                _probabilities[currentLong] -= (1 - _probabilities[currentShort]);
-
-                if (_probabilities[currentLong] < 1)
-                {
-                    shortOptions.Add(currentLong);
-                    longOptions.Pop();
-                }
+                    overFull.Add(i);
             }
         }
 
-        public string GetSelection()
+        private void ProcessOverAndUnderfull(IList<int> underFull, IList<int> overFull)
         {
-            var nextRandom = Random.NextDouble();
-            var weightedRandom = GetRandom(0, _weightLength - 1);
+            while (underFull.Any() && overFull.Any())
+            {
+                var currentUnder = underFull.Pop();
+                var currentOver = overFull.Last();
 
-            var selectionIndex = _probabilities[weightedRandom] >= nextRandom
-                                 ? weightedRandom
-                                 : _inx[weightedRandom];
+                _alias[currentUnder] = currentOver;
+                _probabilities[currentOver] -= (1 - _probabilities[currentUnder]);
+
+                if (_probabilities[currentOver] < 1)
+                {
+                    underFull.Add(currentOver);
+                    overFull.Pop();
+                }
+            }
+        }
+        
+        public T GetSelection()
+        {
+            if (!_probabilities.Any() || !_alias.Any())
+            {
+                throw new InvalidOperationException("Weights have not been set. Build method must be called before a selection is made.");
+            }
+
+            var fairDiceRoll = _random.NextDouble();
+            var biasedCoin = GetBiasedRandom(0, _weightLength - 1);
+
+            var selectionIndex = _probabilities[biasedCoin] >= fairDiceRoll
+                                 ? biasedCoin
+                                 : _alias[biasedCoin];
 
             return _values[selectionIndex].Key;
         }
 
-        private static int GetRandom(int min, int max)
+        private int GetBiasedRandom(int min, int max)
         {
-            return Convert.ToInt32((Math.Floor(Random.NextDouble() * (max - min + 1))) + min);
+            return Convert.ToInt32(Math.Floor(_random.NextDouble() * (max - min + 1)) + min);
         }
     }
 }
